@@ -13598,7 +13598,7 @@ MonoBehaviour:
   - {fileID: 332440668}
   - {fileID: 783087108}
   episodeLimit: 2000
-  nArenas: 128
+  nArenas: 16
   managerType: 1
 --- !u!4 &683857468
 Transform:
@@ -22812,7 +22812,7 @@ MonoBehaviour:
   - {fileID: 509429218}
   - {fileID: 1700744281}
   episodeLimit: 2000
-  nArenas: 128
+  nArenas: 16
   managerType: 0
 --- !u!4 &1203501284
 Transform:
@@ -38940,7 +38940,7 @@ MonoBehaviour:
   - {fileID: 1468859300}
   - {fileID: 2078879655}
   - {fileID: 894116985}
-  episodeLimit: 1000
+  episodeLimit: 2000
   nArenas: 16
   managerType: 0
   averageRewardChangeThreshold: 0.1

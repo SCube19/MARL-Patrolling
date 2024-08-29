@@ -19,7 +19,6 @@ class MultiAgentCurriculumManager : CurriculumManager
     private long dataPoints = 0;
 
     [SerializeField] private float averageRewardChangeThreshold = 0.1f;
-
     public override void Start()
     {
         currentArenas = new GameObject[nArenas];
@@ -58,10 +57,11 @@ class MultiAgentCurriculumManager : CurriculumManager
             lastThiefEma = thiefMetrics.Average;
             lastGuardGroupEma = guardGroupMetrics.Average;
 
-            if (thiefMetrics.DataPoints >= arenas[currentArenaIndex].MinimumEpisodes &&
+            if ((thiefMetrics.DataPoints >= arenas[currentArenaIndex].MinimumEpisodes &&
                 thiefAverageDelta <= averageRewardChangeThreshold &&
                 guardGroupAverageDelta <= averageRewardChangeThreshold && 
-                (thiefMetrics.Average > 0 || guardGroupMetrics.Average > 0))
+                (thiefMetrics.Average > 0 || guardGroupMetrics.Average > 0)) ||
+                (thiefMetrics.DataPoints >= episodeLimit))
                 NextArena();
 
             if (++loopCount == frequency)
@@ -76,7 +76,6 @@ class MultiAgentCurriculumManager : CurriculumManager
 
     protected override void ChangeArena(int arenaIndex)
     {
-        Debug.Log("Changing the arena");
         thiefMetrics.OnArenaChange(arenas[arenaIndex].Id);
         guardGroupMetrics.OnArenaChange(arenas[arenaIndex].Id);
 
