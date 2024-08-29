@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.MLAgents;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Arena : MonoBehaviour
@@ -70,7 +69,7 @@ public class Arena : MonoBehaviour
         float posX = UnityEngine.Random.Range(minX, maxX);
         float posZ = UnityEngine.Random.Range(minZ, maxZ);
         float rotation = UnityEngine.Random.Range(-180.0f, 180.0f);
-        
+
         obj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         obj.transform.position = new Vector3(posX, 0.25f, posZ);
     }

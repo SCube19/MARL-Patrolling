@@ -25,7 +25,7 @@ public class CurriculumManager : MonoBehaviour
 
     private static readonly System.Random rng = new();
 
-    private CurriculumMetrics metrics;
+    protected CurriculumMetrics metrics;
 
     virtual public void Start()
     {
@@ -81,11 +81,8 @@ public class CurriculumManager : MonoBehaviour
             ChangeArena(++currentArenaIndex);
     }
 
-    protected void ChangeArena(int arenaIndex)
+    protected void _ChangeArena(int arenaIndex)
     {
-        Debug.Log("Changing the arena");
-        metrics.OnArenaChange(arenas[arenaIndex].Id);
-
         Arena arena = arenas[arenaIndex];
         arena.gameObject.SetActive(true);
         for (int i = 0; i < nArenas; i++)
@@ -95,5 +92,13 @@ public class CurriculumManager : MonoBehaviour
             currentArenas[i] = next;
         }
         arena.gameObject.SetActive(false);
+    }
+
+    virtual protected void ChangeArena(int arenaIndex)
+    {
+        Debug.Log("Changing the arena");
+        metrics.OnArenaChange(arenas[arenaIndex].Id);
+
+        _ChangeArena(arenaIndex);
     }
 }

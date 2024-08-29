@@ -8,7 +8,6 @@ using UnityEngine;
 
 public class Thief : Agent, ICurriculumAgent
 {
-    private float initialRotation;
     private Vector2 prizePosition;
 
     [SerializeField] private Transform prize;
@@ -28,7 +27,6 @@ public class Thief : Agent, ICurriculumAgent
 
     public override void Initialize()
     {
-        initialRotation = transform.localRotation.eulerAngles.y;
         rb = GetComponent<Rigidbody>();
         MaxStep = 0;
         planeX = plane.GetComponent<Renderer>().bounds.size.x;
@@ -37,8 +35,7 @@ public class Thief : Agent, ICurriculumAgent
 
     public override void OnEpisodeBegin()
     {
-        transform.rotation = Quaternion.Euler(0.0f, initialRotation, 0.0f);
-        arena.PlaceProceduralPrize(transform.gameObject);
+        arena.PlaceProceduralPrize(prize.gameObject);
         arena.PlaceProceduralThief(transform.gameObject);
         prizePosition = new Vector2(prize.localPosition.x / planeX, prize.localPosition.z / planeZ);
     }

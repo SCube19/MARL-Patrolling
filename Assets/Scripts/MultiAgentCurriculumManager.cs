@@ -6,8 +6,8 @@ using UnityEngine;
 class MultiAgentCurriculumManager : CurriculumManager
 {
 
-    private CurriculumMetrics thiefMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f7", "THIEF", 100);
-    private CurriculumMetrics guardGroupMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f8", "GUARD", 100);
+    private CurriculumMetrics thiefMetrics;
+    private CurriculumMetrics guardGroupMetrics;
 
     private float thiefAverageDelta = 0.0f;
     private float guardGroupAverageDelta = 0.0f;
@@ -18,11 +18,13 @@ class MultiAgentCurriculumManager : CurriculumManager
 
     private long dataPoints = 0;
 
-    [SerializeField] private float curriculumAverageRewardThreshold = 0.1f;
+    [SerializeField] private float averageRewardChangeThreshold = 0.1f;
 
     public override void Start()
     {
         currentArenas = new GameObject[nArenas];
+        thiefMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f7", "THIEF", 100);
+        guardGroupMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f8", "GUARD GROUP", 100);
         NextArena();
         StartCoroutine(TryChangeArena());
     }
@@ -40,6 +42,8 @@ class MultiAgentCurriculumManager : CurriculumManager
 
     protected override IEnumerator TryChangeArena()
     {
+        int loopCount = 0;
+        int frequency = 10;
         while (true)
         {
             float thiefDelta = Mathf.Abs(lastThiefEma - thiefMetrics.Average);
@@ -48,13 +52,34 @@ class MultiAgentCurriculumManager : CurriculumManager
             thiefAverageDelta = (thiefDelta * smoothingTerm) + (thiefAverageDelta * (1 - smoothingTerm));
             guardGroupAverageDelta = (guardDelta * smoothingTerm) + (guardGroupAverageDelta * (1 - smoothingTerm));
 
+            Debug.Log("THIEF average delta is " + thiefAverageDelta);
+            Debug.Log("GUARDS average delta is " + guardGroupAverageDelta);
+
+            lastThiefEma = thiefMetrics.Average;
+            lastGuardGroupEma = guardGroupMetrics.Average;
+
             if (thiefMetrics.DataPoints >= arenas[currentArenaIndex].MinimumEpisodes &&
-                thiefAverageDelta <= curriculumAverageRewardThreshold &&
-                guardGroupAverageDelta <= curriculumAverageRewardThreshold && 
+                thiefAverageDelta <= averageRewardChangeThreshold &&
+                guardGroupAverageDelta <= averageRewardChangeThreshold && 
                 (thiefMetrics.Average > 0 || guardGroupMetrics.Average > 0))
                 NextArena();
 
+            if (++loopCount == frequency)
+            {
+                loopCount = 0;
+                thiefMetrics.SendMessage($"Current Thief Average Delta {thiefAverageDelta}");
+                guardGroupMetrics.SendMessage($"Current Guard group EMA Delta {guardGroupAverageDelta}");
+            }
             yield return new WaitForSecondsRealtime(10);
         }
+    }
+
+    protected override void ChangeArena(int arenaIndex)
+    {
+        Debug.Log("Changing the arena");
+        thiefMetrics.OnArenaChange(arenas[arenaIndex].Id);
+        guardGroupMetrics.OnArenaChange(arenas[arenaIndex].Id);
+
+        _ChangeArena(arenaIndex);
     }
 }
