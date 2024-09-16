@@ -5,4 +5,6 @@ using UnityEngine;
 public interface ICurriculumAgent
 {
    public void EndEpisodeCurriculum(float reward, bool interrupt = false);
+
+   Arena Arena {get;}
 }

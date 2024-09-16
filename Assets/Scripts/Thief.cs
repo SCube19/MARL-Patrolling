@@ -21,9 +21,9 @@ public class Thief : Agent, ICurriculumAgent
     [SerializeField] private float maxSpeed = 11.0f;
     [SerializeField] private float rotationSpeed = 45.0f;
 
-    [SerializeField] private CurriculumManager curriculumManager;
+    [field: SerializeField] private CurriculumManager curriculumManager;
 
-    [SerializeField] private Arena arena;
+    [field: SerializeField] public Arena Arena {get; set;}
 
     public override void Initialize()
     {
@@ -35,8 +35,8 @@ public class Thief : Agent, ICurriculumAgent
 
     public override void OnEpisodeBegin()
     {
-        arena.PlaceProceduralPrize(prize.gameObject);
-        arena.PlaceProceduralThief(transform.gameObject);
+        Arena.PlaceProceduralPrize(prize.gameObject);
+        Arena.PlaceProceduralThief(transform.gameObject);
         prizePosition = new Vector2(prize.localPosition.x / planeX, prize.localPosition.z / planeZ);
     }
     
@@ -49,12 +49,12 @@ public class Thief : Agent, ICurriculumAgent
         rb.velocity = forward * maxSpeed * transform.forward;
 
         //Rewards
-        AddReward(-1.0f / arena.MaxSteps);
+        AddReward(-1.0f / Arena.MaxSteps);
 
-        if (StepCount >= arena.MaxSteps)
+        if (StepCount >= Arena.MaxSteps)
         {
             plane.GetComponent<MeshRenderer>().material.color = Color.white;
-            arena.EndEpisode(Arena.EpisodeResult.DRAW);       
+            Arena.EndEpisode(Arena.EpisodeResult.DRAW);       
         }
     }
 
@@ -80,19 +80,19 @@ public class Thief : Agent, ICurriculumAgent
         if (other.CompareTag("Guard"))
         {
             plane.GetComponent<MeshRenderer>().material.color = Color.blue;
-            arena.EndEpisode(Arena.EpisodeResult.THIEF_CAUGHT);
+            Arena.EndEpisode(Arena.EpisodeResult.THIEF_CAUGHT);
         }
         else if (other.CompareTag("Prize"))
         {
             plane.GetComponent<MeshRenderer>().material.color = new Color(255, 100, 0);
-            arena.EndEpisode(Arena.EpisodeResult.PRIZE_STOLEN);
+            Arena.EndEpisode(Arena.EpisodeResult.PRIZE_STOLEN);
         }
     }
 
     public void EndEpisodeCurriculum(float reward, bool interrupt = false)
     {
         AddReward(reward + ProximityReward());
-        curriculumManager.AddReward(GetCumulativeReward(), arena.Id, this);
+        curriculumManager.AddReward(GetCumulativeReward(), Arena.Id, this);
         if (interrupt)
             EpisodeInterrupted();
         else

@@ -10,9 +10,9 @@ public class GuardGroup : MonoBehaviour, ICurriculumAgent
 {
     [SerializeField] private List<Agent> guards;
 
-    [SerializeField] private Arena arena;
+    [field: SerializeField] public Arena Arena {get; set;}
     
-    [SerializeField] private CurriculumManager curriculumManager;
+    [field: SerializeField] private CurriculumManager curriculumManager;
 
     private SimpleMultiAgentGroup simpleGuardGroup = new();
 
@@ -26,15 +26,15 @@ public class GuardGroup : MonoBehaviour, ICurriculumAgent
     void FixedUpdate()
     {
         //Rewards
-        simpleGuardGroup.AddGroupReward(-1.0f / arena.MaxSteps);
-        cumulativeReward += -1.0f / arena.MaxSteps;
+        simpleGuardGroup.AddGroupReward(-1.0f / Arena.MaxSteps);
+        cumulativeReward += -1.0f / Arena.MaxSteps;
     }
 
     public void EndEpisodeCurriculum(float reward, bool interrupt = false)
     {
         simpleGuardGroup.AddGroupReward(reward);
         cumulativeReward += reward;
-        curriculumManager.AddReward(cumulativeReward, arena.Id, this);
+        curriculumManager.AddReward(cumulativeReward, Arena.Id, this);
         cumulativeReward = 0.0f;
 
         if (interrupt)

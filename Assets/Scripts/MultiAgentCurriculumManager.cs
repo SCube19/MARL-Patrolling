@@ -1,84 +1,116 @@
 
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 
 class MultiAgentCurriculumManager : CurriculumManager
 {
 
-    private CurriculumMetrics thiefMetrics;
-    private CurriculumMetrics guardGroupMetrics;
+    private new MultiAgentCurriculumMetrics metrics;
 
-    private float thiefAverageDelta = 0.0f;
-    private float guardGroupAverageDelta = 0.0f;
+    private Dictionary<int, List<GameObject>> arenaGroups;
 
-    private float lastThiefEma = 0.0f;
-    private float lastGuardGroupEma = 0.0f;
-    private static readonly float smoothing = 2.0f;
+    private Dictionary<int, Tuple<Arena, float>> arenaIdToArena = new();
+    [SerializeField] private int arenaRatioAdjustmentInterval = 200;
+    [SerializeField] private int minimumArenaGroupSize = 3;
 
-    private long dataPoints = 0;
+    private int trashLevel = 0;
+    private float trashStart = 5.0f;
 
-    [SerializeField] private float averageRewardChangeThreshold = 0.1f;
+    private int trashLevels = 64;
+
+
     public override void Start()
     {
-        currentArenas = new GameObject[nArenas];
-        thiefMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f7", "THIEF", 100);
-        guardGroupMetrics = new("621f0a70-4f87-11ea-a6bf-784f4387d1f8", "GUARD GROUP", 100);
-        NextArena();
-        StartCoroutine(TryChangeArena());
+        arenaGroups = new();
+        float offset = 0.0f;
+        List<int> ids = new List<int>();
+        foreach (var arena in arenas)
+        {
+            arenaIdToArena.Add(arena.Id, new Tuple<Arena, float>(arena, offset));
+            offset += arena.ArenaSize + 10.0f;
+            ids.Add(arena.Id);
+        }
+        metrics = new MultiAgentCurriculumMetrics("621f0a70-4f87-11ea-a6bf-784f4387d1f8", 100, ids);
+        CreateArenaGroups();
+        StartCoroutine(AdjustArenaRatios());
     }
 
     public override void AddReward(float reward, int arenaId, ICurriculumAgent requester)
     {
-        if (requester is Thief)
-            thiefMetrics.AddReward(reward, arenaId);
-        else
-            guardGroupMetrics.AddReward(reward, arenaId);
-
-        if (thiefMetrics.DataPoints >= episodeLimit)
-            PrevArena();
+        metrics.AddReward(reward, arenaId, requester);
     }
 
-    protected override IEnumerator TryChangeArena()
+    private void ChangeArenaGroupSize(int arenaId, double arenaPercentage)
     {
-        int loopCount = 0;
-        int frequency = 10;
-        while (true)
+        int groupSize = Math.Max(minimumArenaGroupSize, (int)Math.Ceiling((double)nArenas * arenaPercentage));
+
+        var (arena, offset) = arenaIdToArena[arenaId];
+        if (groupSize > arenaGroups[arenaId].Count)
         {
-            float thiefDelta = Mathf.Abs(lastThiefEma - thiefMetrics.Average);
-            float guardDelta = Mathf.Abs(lastGuardGroupEma - guardGroupMetrics.Average);
-            float smoothingTerm = smoothing / (float)(++dataPoints + 1);
-            thiefAverageDelta = (thiefDelta * smoothingTerm) + (thiefAverageDelta * (1 - smoothingTerm));
-            guardGroupAverageDelta = (guardDelta * smoothingTerm) + (guardGroupAverageDelta * (1 - smoothingTerm));
-
-            Debug.Log("THIEF average delta is " + thiefAverageDelta);
-            Debug.Log("GUARDS average delta is " + guardGroupAverageDelta);
-
-            lastThiefEma = thiefMetrics.Average;
-            lastGuardGroupEma = guardGroupMetrics.Average;
-
-            if ((thiefMetrics.DataPoints >= arenas[currentArenaIndex].MinimumEpisodes &&
-                thiefAverageDelta <= averageRewardChangeThreshold &&
-                guardGroupAverageDelta <= averageRewardChangeThreshold && 
-                (thiefMetrics.Average > 0 || guardGroupMetrics.Average > 0)) ||
-                (thiefMetrics.DataPoints >= episodeLimit))
-                NextArena();
-
-            if (++loopCount == frequency)
+            arena.gameObject.SetActive(true);
+            for (int i = arenaGroups[arenaId].Count; i < groupSize; i++)
+                arenaGroups[arenaId].Add(Instantiate(arena.gameObject, new (transform.position.x + offset, 0.0f, i * (arena.ArenaSize + 1.0f)), new Quaternion()));
+            arena.gameObject.SetActive(false);
+        }
+        else 
+        {
+            List<GameObject> group = arenaGroups[arenaId];
+            for (int i = group.Count - 1; i >= groupSize; i--)
             {
-                loopCount = 0;
-                thiefMetrics.SendMessage($"Current Thief Average Delta {thiefAverageDelta}");
-                guardGroupMetrics.SendMessage($"Current Guard group EMA Delta {guardGroupAverageDelta}");
+                group[i].transform.position += new Vector3(0, trashStart * (1 + trashLevel), 0);
+                group[i].GetComponent<Arena>().Die = true;
+                group[i].gameObject.transform.GetChild(2).GetComponent<MeshRenderer>().material.color = Color.red;
             }
-            yield return new WaitForSecondsRealtime(10);
+            group.RemoveRange(groupSize, group.Count - groupSize);   
+
+            trashLevel = (trashLevel + 1) % trashLevels;
         }
     }
 
-    protected override void ChangeArena(int arenaIndex)
+    public IEnumerator AdjustArenaRatios()
     {
-        thiefMetrics.OnArenaChange(arenas[arenaIndex].Id);
-        guardGroupMetrics.OnArenaChange(arenas[arenaIndex].Id);
+        while (true)
+        {
+            Dictionary<int, float> arenasEmaDelta = new Dictionary<int, float>();
+            double expSum = 0;
+            foreach (var el in metrics.ArenaToStats)
+            {
+                float averageChange = (el.Value.GuardGroupAverageDelta + el.Value.ThiefAverageDelta) / 2.0f;
+                arenasEmaDelta.Add(el.Key, averageChange);
+                expSum += Math.Exp(averageChange);
+            }
+            
+            foreach (var arena in arenasEmaDelta)
+            {   
+                double arenaPercentage = Math.Exp(arena.Value) / expSum;
+                ChangeArenaGroupSize(arena.Key, arenaPercentage);
+                metrics.SendMessage($"Adjusted ratio for arena {arena.Key}: {arenaPercentage * 100}% = {arenaGroups[arena.Key].Count}");
+            }
+            
+            yield return new WaitForSecondsRealtime(arenaRatioAdjustmentInterval);
+        }
+    }
 
-        _ChangeArena(arenaIndex);
+    private void CreateArenaGroups()
+    {
+        int groupSize = nArenas / arenas.Count;
+        float verticalOffset = 0;
+        foreach (var arena in arenas)
+        {
+            arenaGroups.Add(arena.Id, new List<GameObject>());
+            arena.gameObject.SetActive(true);
+            for (int i = 0; i < groupSize; i++)
+            {
+                arenaGroups[arena.Id].Add(Instantiate(arena.gameObject, new (transform.position.x + verticalOffset, 0.0f, i * (arena.ArenaSize + 1.0f)), new Quaternion()));
+            }
+            verticalOffset += arena.ArenaSize + 10.0f;
+            arena.gameObject.SetActive(false);
+        }
     }
 }

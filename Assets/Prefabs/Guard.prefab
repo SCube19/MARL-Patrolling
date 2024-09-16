@@ -365,6 +365,8 @@ GameObject:
   - component: {fileID: 790425722024152732}
   - component: {fileID: 468906633151491778}
   - component: {fileID: 3971261364172423668}
+  - component: {fileID: -9086732101069861957}
+  - component: {fileID: 6569408019717596766}
   m_Layer: 0
   m_Name: Guard
   m_TagString: Guard
@@ -443,7 +445,7 @@ MonoBehaviour:
   MaxStep: 0
   guards: []
   plane: {fileID: 0}
-  maxSpeed: 5.5
+  maxSpeed: 6
   rotationSpeed: 270
   arena: {fileID: 0}
   soloScenario: 0
@@ -478,6 +480,36 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 1
+--- !u!114 &-9086732101069861957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8147887152634471648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: friendSensor
+  m_ObservableSize: 2
+  m_MaxNumObservables: 4
+--- !u!114 &6569408019717596766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8147887152634471648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8012d5925524537b27131fef517017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: thiefSensor
+  m_ObservableSize: 1
+  m_MaxNumObservables: 2
 --- !u!1 &8147887152959596760
 GameObject:
   m_ObjectHideFlags: 0
@@ -951,7 +983,7 @@ MonoBehaviour:
   m_RaysPerDirection: 12
   m_MaxRayDegrees: 45
   m_SphereCastRadius: 0.2
-  m_RayLength: 12
+  m_RayLength: 11
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967241

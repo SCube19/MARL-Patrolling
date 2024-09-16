@@ -22,6 +22,8 @@ public class Arena : MonoBehaviour
 
     private static readonly System.Random rng = new();
 
+    public bool Die = false;
+
     public enum EpisodeResult {
         THIEF_CAUGHT,
         PRIZE_STOLEN,
@@ -30,8 +32,8 @@ public class Arena : MonoBehaviour
 
     private static readonly Dictionary<EpisodeResult, Tuple<float, float>> resultToReward = new()
     {
-        {EpisodeResult.THIEF_CAUGHT, new Tuple<float, float>(-2.0f, 2.0f)},
-        {EpisodeResult.PRIZE_STOLEN, new Tuple<float, float>(2.0f, -2.0f)},
+        {EpisodeResult.THIEF_CAUGHT, new Tuple<float, float>(-3.0f, 3.0f)},
+        {EpisodeResult.PRIZE_STOLEN, new Tuple<float, float>(2.0f, -3.0f)},
         {EpisodeResult.DRAW, new Tuple<float, float>(0.0f, 0.0f)}
     };
 
@@ -41,6 +43,9 @@ public class Arena : MonoBehaviour
             thief?.GetComponent<ICurriculumAgent>().EndEpisodeCurriculum(resultToReward.GetValueOrDefault(result).Item1, result == EpisodeResult.DRAW);
         if (guardGroup != null)
             guardGroup?.EndEpisodeCurriculum(resultToReward.GetValueOrDefault(result).Item2, result == EpisodeResult.DRAW);
+            
+        if (Die)
+            Destroy(gameObject);
     }   
 
     public void PlaceProceduralPrize(GameObject prize)
@@ -72,5 +77,6 @@ public class Arena : MonoBehaviour
 
         obj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         obj.transform.position = new Vector3(posX, 0.25f, posZ);
+        obj.transform.localPosition = new Vector3(obj.transform.localPosition.x, 0.25f, obj.transform.localPosition.z);
     }
 }
