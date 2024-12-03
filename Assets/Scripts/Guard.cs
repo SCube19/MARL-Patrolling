@@ -33,8 +33,16 @@ public class Guard : Agent
 
     public bool ThiefVisible { get; set; }
 
+    public GameObject Thief { get; set; }
+
     BufferSensorComponent friendSensor;
     BufferSensorComponent thiefSensor;
+
+    [SerializeField] private Transform prize;
+    private Vector2 prizePosition;
+
+    private Vector2 initialPosition;
+    private float initialRotation;
 
     public override void Initialize()
     {
@@ -43,8 +51,8 @@ public class Guard : Agent
         friendSensor = bufferSensor[0];
         thiefSensor = bufferSensor[1];
         MaxStep = 0;
-        planeX = plane.GetComponent<Renderer>().bounds.size.x;
-        planeZ = plane.GetComponent<Renderer>().bounds.size.z;
+        planeX = 60;
+        planeZ = 60;
     }
 
     public override void OnEpisodeBegin()
@@ -52,6 +60,9 @@ public class Guard : Agent
         arena.PlaceProceduralGuard(transform.gameObject);
         if (soloScenario)
             arena.PlaceProceduralPrize(soloScenarioThief);
+        prizePosition = prize ? new Vector2(prize.localPosition.x / planeX, prize.localPosition.z / planeZ) : new Vector2(0, 0);
+        initialPosition = new(transform.localPosition.x / planeX, transform.localPosition.z / planeZ);
+        initialRotation = (transform.localRotation.y % 360 + 360) % 360 / 360;
         StartCoroutine(ThiefVisibleUpdate());
     }
 
@@ -65,28 +76,46 @@ public class Guard : Agent
 
         if (soloScenario && StepCount >= arena.MaxSteps)
         {
-            plane.GetComponent<MeshRenderer>().material.color = Color.white;
+            //plane.GetComponent<MeshRenderer>().material.color = Color.white;
             arena.EndEpisode(Arena.EpisodeResult.DRAW);       
+        }
+        if (!soloScenario)
+        {
+            
+            Vector2 currPosition = new(transform.localPosition.x / planeX, transform.localPosition.z / planeZ);
+            float proximity = Vector3.Magnitude(currPosition - prizePosition);
+            if (proximity <= 1.0f)
+                AddReward(-1.0f / (arena.MaxSteps * 1.0f));
+            else
+                AddReward(-1.0f / (arena.MaxSteps * proximity));
         }
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
         Vector2 currPosition = new(transform.localPosition.x / planeX, transform.localPosition.z / planeZ);
-        sensor.AddObservation(currPosition);
-        sensor.AddObservation(new Vector2(GetComponent<Rigidbody>().velocity.x / maxSpeed, GetComponent<Rigidbody>().velocity.z / maxSpeed));
-        
-
+        Vector2 currVelocity = new(GetComponent<Rigidbody>().velocity.x / maxSpeed, GetComponent<Rigidbody>().velocity.z / maxSpeed);
+        sensor.AddObservation(initialPosition - currPosition);
+        sensor.AddObservation(currVelocity);
+        sensor.AddObservation(initialRotation - ((transform.localRotation.y % 360 + 360) % 360 / 360));
+        sensor.AddObservation(prizePosition - currPosition);
+        sensor.AddObservation(Vector3.Magnitude(prizePosition - currPosition));
 
         if (guards.Count == 0)
             return;
+        bool thiefAlreadyAdded = false;
         foreach (Guard guard in guards)
         {
-            float[] guardsPositions = new float[2]{guard.transform.localPosition.x / planeX, guard.transform.localPosition.z / planeZ};
-            float[] guardsVelocities = new float[2]{guard.GetComponent<Rigidbody>().velocity.x / maxSpeed, guard.GetComponent<Rigidbody>().velocity.z / maxSpeed};
-            thiefSensor.AppendObservation(guardsPositions);
-            thiefSensor.AppendObservation(guardsVelocities);
-            friendSensor.AppendObservation(new float[]{guard.ThiefVisible ? 1.0f : 0.0f});
+            float[] guardsPositions = new float[2]{guard.transform.localPosition.x / planeX - currPosition.x, guard.transform.localPosition.z / planeZ - currPosition.y};
+            float[] guardsVelocities = new float[2]{guard.GetComponent<Rigidbody>().velocity.x / maxSpeed - currVelocity.x, guard.GetComponent<Rigidbody>().velocity.z / maxSpeed - currVelocity.y};
+            friendSensor.AppendObservation(guardsPositions);
+            friendSensor.AppendObservation(guardsVelocities);
+            if (!thiefAlreadyAdded && guard.ThiefVisible)
+            {
+                thiefAlreadyAdded = true;
+                float[] thiefPosition = new float[2]{guard.Thief.transform.localPosition.x / planeX - currPosition.x, guard.Thief.transform.localPosition.z / planeZ - currPosition.y};
+                thiefSensor.AppendObservation(thiefPosition);
+            }
         }
 
         //position of a thief if known
@@ -104,7 +133,7 @@ public class Guard : Agent
     {
         if (soloScenario && other.CompareTag("Thief"))
         {
-            plane.GetComponent<MeshRenderer>().material.color = Color.blue;
+            //plane.GetComponent<MeshRenderer>().material.color = Color.blue;
             arena.EndEpisode(Arena.EpisodeResult.THIEF_CAUGHT);
             StopCoroutine(ThiefVisibleUpdate());
         }
@@ -125,10 +154,10 @@ public class Guard : Agent
                 if (rayOutputs[i].HitTagIndex == 2)
                 {
                     ThiefVisible = true;
+                    Thief = rayOutputs[i].HitGameObject;
                     break;
                 }
             }
-            Debug.Log("visible: " + ThiefVisible);
             yield return new WaitForSeconds(1);
         }
     }

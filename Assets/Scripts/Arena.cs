@@ -20,6 +20,10 @@ public class Arena : MonoBehaviour
     [SerializeField] private List<Collider> thiefAreas;
     [SerializeField] private List<Collider> guardAreas;
 
+    [SerializeField] private bool isInference;
+    [SerializeField] private TrailManager trailManager;
+    
+    [SerializeField] public float EncompassingCameraHeight;
     private static readonly System.Random rng = new();
 
     public bool Die = false;
@@ -39,13 +43,18 @@ public class Arena : MonoBehaviour
 
     public void EndEpisode(EpisodeResult result)
     {
+        if (isInference)
+        {
+            trailManager.EndEpisode(result, gameObject);
+            return;
+        }
+
         if (thief != null)
             thief?.GetComponent<ICurriculumAgent>().EndEpisodeCurriculum(resultToReward.GetValueOrDefault(result).Item1, result == EpisodeResult.DRAW);
         if (guardGroup != null)
             guardGroup?.EndEpisodeCurriculum(resultToReward.GetValueOrDefault(result).Item2, result == EpisodeResult.DRAW);
-            
         if (Die)
-            Destroy(gameObject);
+            Destroy(gameObject);  
     }   
 
     public void PlaceProceduralPrize(GameObject prize)
@@ -65,6 +74,9 @@ public class Arena : MonoBehaviour
 
     private void PlaceProceduralGameObject(GameObject obj, List<Collider> areas)
     {
+        if (areas.Count == 0)
+            return;
+            
         Collider area = areas[rng.Next(areas.Count)];
         float minX = area.bounds.min.x;
         float maxX = area.bounds.max.x;
@@ -78,5 +90,7 @@ public class Arena : MonoBehaviour
         obj.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         obj.transform.position = new Vector3(posX, 0.25f, posZ);
         obj.transform.localPosition = new Vector3(obj.transform.localPosition.x, 0.25f, obj.transform.localPosition.z);
+
+        obj.GetComponentInChildren<TrailRenderer>()?.Clear();
     }
 }

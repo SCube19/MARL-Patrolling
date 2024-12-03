@@ -1,0 +1,35 @@
+Arena1:
+    - Thief: 43
+    - Guard: 957
+
+Arena2:
+    - Thief: 624
+    - Guard: 376
+
+Arena3:
+    - Thief: 109
+    - Guard: 891
+
+Arena4:
+    - Thief: 511
+    - Guard: 489
+
+Arena5:
+    - Thief: 346
+    - Guard: 654
+
+Arena6:
+    - Thief: 251
+    - Guard: 749
+
+Gen1:
+    - Thief: 15
+    - Guard: 985
+
+Gen2:
+    - Thief: 413
+    - Guard: 587
+
+Gen3:
+    - Thief: 332
+    - Guard: 668

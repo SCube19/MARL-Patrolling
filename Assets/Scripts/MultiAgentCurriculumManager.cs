@@ -33,17 +33,17 @@ class MultiAgentCurriculumManager : CurriculumManager
         foreach (var arena in arenas)
         {
             arenaIdToArena.Add(arena.Id, new Tuple<Arena, float>(arena, offset));
-            offset += arena.ArenaSize + 10.0f;
+            offset += arena.ArenaSize + 25.0f;
             ids.Add(arena.Id);
         }
-        metrics = new MultiAgentCurriculumMetrics("621f0a70-4f87-11ea-a6bf-784f4387d1f8", 100, ids);
+        metrics = new MultiAgentCurriculumMetrics("621f0a70-4f87-11ea-a6bf-784f4387d1f8", 300, ids);
         CreateArenaGroups();
         StartCoroutine(AdjustArenaRatios());
     }
 
     public override void AddReward(float reward, int arenaId, ICurriculumAgent requester)
     {
-        metrics.AddReward(reward, arenaId, requester);
+        metrics?.AddReward(reward, arenaId, requester);
     }
 
     private void ChangeArenaGroupSize(int arenaId, double arenaPercentage)
@@ -75,6 +75,7 @@ class MultiAgentCurriculumManager : CurriculumManager
 
     public IEnumerator AdjustArenaRatios()
     {
+        float skew = 5.0f;
         while (true)
         {
             Dictionary<int, float> arenasEmaDelta = new Dictionary<int, float>();
@@ -82,8 +83,8 @@ class MultiAgentCurriculumManager : CurriculumManager
             foreach (var el in metrics.ArenaToStats)
             {
                 float averageChange = (el.Value.GuardGroupAverageDelta + el.Value.ThiefAverageDelta) / 2.0f;
-                arenasEmaDelta.Add(el.Key, averageChange);
-                expSum += Math.Exp(averageChange);
+                arenasEmaDelta.Add(el.Key, averageChange * skew);
+                expSum += Math.Exp(averageChange * skew);
             }
             
             foreach (var arena in arenasEmaDelta)
@@ -109,7 +110,7 @@ class MultiAgentCurriculumManager : CurriculumManager
             {
                 arenaGroups[arena.Id].Add(Instantiate(arena.gameObject, new (transform.position.x + verticalOffset, 0.0f, i * (arena.ArenaSize + 1.0f)), new Quaternion()));
             }
-            verticalOffset += arena.ArenaSize + 10.0f;
+            verticalOffset += arena.ArenaSize + 25.0f;
             arena.gameObject.SetActive(false);
         }
     }

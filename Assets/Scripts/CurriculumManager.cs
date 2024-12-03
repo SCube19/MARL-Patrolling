@@ -110,7 +110,7 @@ public class CurriculumManager : MonoBehaviour, ICurriculumManager
 
     protected void DestroyManager()
     {
-        for (int i = 0; i < nArenas; i++)
+        for (int i = 0; i < nArenas - 1; i++)
         {
             Destroy(currentArenas[i]);
         }

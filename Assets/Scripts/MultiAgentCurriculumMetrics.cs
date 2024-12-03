@@ -56,7 +56,7 @@ class MultiAgentCurriculumMetrics : SideChannel, ICurriculumMetrics
             arenaStats.GuardGroupAverage = (reward * smoothingTerm) + (arenaStats.GuardGroupAverage * (1 - smoothingTerm));
         }
         
-        if (DeltaUpdates % DeltaUpdateFrequency == 0)
+        if ((arenaStats.ThiefDataPoints + arenaStats.GuardGroupDataPoints) % DeltaUpdateFrequency == 0)
         {
             float thiefDelta = Mathf.Abs(arenaStats.LastThiefAverage - arenaStats.ThiefAverage);
             float smoothingTerm = smoothing / (float)(++arenaStats.ThiefDeltaDataPoints + 1);
@@ -67,6 +67,7 @@ class MultiAgentCurriculumMetrics : SideChannel, ICurriculumMetrics
             float smoothingTerm2 = smoothing / (float)(++arenaStats.GuardGroupDeltaDataPoints + 1);
             arenaStats.GuardGroupAverageDelta = (guardDelta * smoothingTerm2) + (arenaStats.GuardGroupAverageDelta * (1 - smoothingTerm2));
             arenaStats.LastGuardGroupAverage = arenaStats.GuardGroupAverage;
+            
         }
 
         if (DeltaUpdates % frequency == 0)
@@ -106,9 +107,12 @@ class MultiAgentCurriculumMetrics : SideChannel, ICurriculumMetrics
     {
         float averageThief = ArenaToStats.Values.Average(x => x.ThiefAverage);
         float averageGuards = ArenaToStats.Values.Average(x => x.GuardGroupAverage);
-
+        float averageThiefDelta = ArenaToStats.Values.Average(x => x.ThiefAverageDelta);
+        float averageGuardsDelta = ArenaToStats.Values.Average(x => x.GuardGroupAverageDelta);
         Academy.Instance.StatsRecorder.Add("Exponential Moving Average Thief Reward", averageThief);
         Academy.Instance.StatsRecorder.Add("Exponential Moving Average Guards Reward", averageGuards);
+        Academy.Instance.StatsRecorder.Add("Exponential Moving Average Thief Reward Delta", averageThiefDelta);
+        Academy.Instance.StatsRecorder.Add("Exponential Moving Average Guards Reward Delta", averageGuardsDelta);
     }
 
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
@@ -27,7 +28,16 @@ public class GuardGroup : MonoBehaviour, ICurriculumAgent
     {
         //Rewards
         simpleGuardGroup.AddGroupReward(-1.0f / Arena.MaxSteps);
-        cumulativeReward += -1.0f / Arena.MaxSteps;
+        cumulativeReward += (-1.0f / Arena.MaxSteps);
+        foreach (Agent guard in guards)
+        {
+            if (guard.GetComponent<Guard>().ThiefVisible)
+            {
+                simpleGuardGroup.AddGroupReward(1.0f / Arena.MaxSteps);
+                cumulativeReward += 1.0f / Arena.MaxSteps;
+                break;
+            }
+        }
     }
 
     public void EndEpisodeCurriculum(float reward, bool interrupt = false)
