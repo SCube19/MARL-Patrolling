@@ -72,7 +72,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 
-/Lib
+/Lib/**/*/
 /results
 /.vscode
 /Scripts
