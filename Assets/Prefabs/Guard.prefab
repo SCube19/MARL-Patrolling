@@ -560,7 +560,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 029647c5cd8833945a7031d870575571, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 0b614e0c9c1d1de4791f44d12226bb67, type: 3}
   m_InferenceDevice: 1
   m_BehaviorType: 0
   m_BehaviorName: GuardBehavior
