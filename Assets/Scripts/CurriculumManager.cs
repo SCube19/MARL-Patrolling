@@ -54,20 +54,6 @@ public class CurriculumManager : MonoBehaviour, ICurriculumManager
                 NextArena();
     }
     
-    //Interval coroutine for trying to advance to the next arena
-    // virtual protected IEnumerator TryChangeArena()
-    // {
-    //     while (true)
-    //     {
-    //         Debug.Log("Checking for new arena");
-    //         if ((metrics.DataPoints >= arenas[currentArenaIndex].MinimumEpisodes &&
-    //            metrics.Average >= arenas[currentArenaIndex].TargetAverageReward) ||
-    //            (metrics.DataPoints >= episodeLimit))
-    //             NextArena();
-    //         yield return new WaitForSecondsRealtime(10);
-    //     }
-    // }
-
     protected void PrevArena()
     {
         if (currentArenaIndex > 0)

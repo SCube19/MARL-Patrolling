@@ -79,3 +79,5 @@ crashlytics-build.properties
 /share
 .vsconfig
 pyvenv.cfg
+
+*.meta
