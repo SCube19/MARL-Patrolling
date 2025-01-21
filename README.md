@@ -31,6 +31,11 @@ Feel free to use the code and contact / create an issue if you need anything.
 
 Overall there are some silliness in the code, stemming from the need to implement it fast. It's functional and I will not change it, but still you can use chunks of it in your own research.
 
+### Scipts
+
+- learn.py: Patched mlagents learn.py file 
+- image.py: Used to create heatmap data from TrailManager results
+  
 ### Scenes
 
 Out of convinience certain experiments were divided into scenes.
